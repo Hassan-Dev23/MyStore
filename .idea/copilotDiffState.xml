@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/example/mystore/domain/repo/repo.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/example/mystore/domain/repo/repo.kt" />
+              <option name="originalContent" value="package com.example.mystore.domain.repo&#10;&#10;import android.net.wifi.hotspot2.pps.Credential&#10;import com.example.mystore.common.ResultState&#10;import com.example.mystore.domain.modelClasses.CategoryModel&#10;import com.example.mystore.domain.modelClasses.Product&#10;import com.example.mystore.domain.modelClasses.UserCredentialsModel&#10;import com.example.mystore.domain.modelClasses.UserDetailsModel&#10;import kotlinx.coroutines.flow.Flow&#10;&#10;interface Repo {&#10;   suspend fun registerUserWithEmailAndPassword(user: UserDetailsModel): Flow&lt;ResultState&lt;String&gt;&gt;&#10;   suspend fun loginUserWithEmailAndPassword(user: UserCredentialsModel) : Flow&lt;ResultState&lt;String&gt;&gt;&#10;   suspend fun getAllCategories(): Flow&lt;ResultState&lt;List&lt;CategoryModel&gt;&gt;&gt;&#10;   suspend fun getAllProducts(): Flow&lt;ResultState&lt;List&lt;Product&gt;&gt;&gt;&#10;   suspend fun getProductsByCategory(category: String): Flow&lt;ResultState&lt;List&lt;Product&gt;&gt;&gt;&#10;   suspend fun getProductById(productId: String): Flow&lt;ResultState&lt;Product&gt;&gt;&#10;&#10;&#10;}" />
+              <option name="updatedContent" value="package com.example.mystore.domain.repo&#10;&#10;import android.net.wifi.hotspot2.pps.Credential&#10;import com.example.mystore.common.ResultState&#10;import com.example.mystore.domain.modelClasses.CategoryModel&#10;import com.example.mystore.domain.modelClasses.Product&#10;import com.example.mystore.domain.modelClasses.UserCredentialsModel&#10;import com.example.mystore.domain.modelClasses.UserDetailsModel&#10;import kotlinx.coroutines.flow.Flow&#10;&#10;interface Repo {&#10;   suspend fun registerUserWithEmailAndPassword(user: UserDetailsModel): Flow&lt;ResultState&lt;String&gt;&gt;&#10;   suspend fun loginUserWithEmailAndPassword(user: UserCredentialsModel) : Flow&lt;ResultState&lt;String&gt;&gt;&#10;   suspend fun getAllCategories(): Flow&lt;ResultState&lt;List&lt;CategoryModel&gt;&gt;&gt;&#10;   suspend fun getAllProducts(): Flow&lt;ResultState&lt;List&lt;Product&gt;&gt;&gt;&#10;   suspend fun getProductsByCategory(category: String): Flow&lt;ResultState&lt;List&lt;Product&gt;&gt;&gt;&#10;   suspend fun getProductById(productId: String): Flow&lt;ResultState&lt;Product&gt;&gt;&#10;   suspend fun getHomeCategories(): Flow&lt;ResultState&lt;List&lt;CategoryModel&gt;&gt;&gt;&#10;&#10;&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

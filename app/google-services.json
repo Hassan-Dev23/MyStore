@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "337780294331",
+    "project_id": "b2c-shopping",
+    "storage_bucket": "b2c-shopping.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:337780294331:android:fa0525fdcea9d7eac85f9e",
+        "android_client_info": {
+          "package_name": "com.example.mystore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC8QjYE2hdI3kjCHxN--4nbXt7IZ_Aim4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:337780294331:android:e535b56449d0983bc85f9e",
+        "android_client_info": {
+          "package_name": "com.example.mystoreadmin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC8QjYE2hdI3kjCHxN--4nbXt7IZ_Aim4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
