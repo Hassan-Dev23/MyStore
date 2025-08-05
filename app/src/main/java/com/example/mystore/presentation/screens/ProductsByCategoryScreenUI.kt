@@ -1,6 +1,7 @@
 package com.example.mystore.presentation.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -16,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -24,13 +26,16 @@ import com.example.mystore.presentation.viewModel.ShopViewModel
 import com.example.mystore.presentation.viewModel.UIState
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavBackStack
+import com.example.mystore.presentation.navigation.OtherScreen
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductsByCategoryScreenUI(
     category: String,
-    paddings: PaddingValues ,
-    viewModel: ShopViewModel = hiltViewModel()
+    paddings: PaddingValues,
+    viewModel: ShopViewModel = hiltViewModel(),
+    backStack: NavBackStack
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val productsState by viewModel.getProductsByCategoryState.collectAsStateWithLifecycle()
@@ -62,6 +67,7 @@ fun ProductsByCategoryScreenUI(
                 val products = (productsState as UIState.Success<List<Product>>).data
                 if (products.isNotEmpty()) "Products in \"${products.first().category}\"" else "Products"
             }
+
             else -> "Products"
         }
         Text(
@@ -74,6 +80,7 @@ fun ProductsByCategoryScreenUI(
             is UIState.Loading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
+
             is UIState.Error -> {
                 Text(
                     text = (productsState as UIState.Error).message,
@@ -81,10 +88,14 @@ fun ProductsByCategoryScreenUI(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             }
+
             is UIState.Success<*> -> {
                 val products = (productsState as UIState.Success<List<Product>>).data
                 if (products.isEmpty()) {
-                    Text("No products found.", modifier = Modifier.align(Alignment.CenterHorizontally))
+                    Text(
+                        "No products found.",
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
                 } else {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
@@ -92,24 +103,39 @@ fun ProductsByCategoryScreenUI(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(products.filter { it.name.contains(searchQuery, ignoreCase = true) }) { product ->
-                            ProductCardTemuStyle(product)
+                        items(products.filter {
+                            it.name.contains(
+                                searchQuery,
+                                ignoreCase = true
+                            )
+                        }) { product ->
+                            ProductCardTemuStyle(product){
+                                backStack.add(
+                                    OtherScreen.ProductDetails(
+                                        productId = product.id
+                                    )
+                                )
+                            }
                         }
                     }
                 }
             }
+
             is UIState.Empty -> {}
         }
     }
 }
 
 @Composable
-fun ProductCardTemuStyle(product: Product) {
+fun ProductCardTemuStyle(product: Product, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 4.dp)
-            .clip(RoundedCornerShape(16.dp)),
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(
+                onClick = onClick
+            ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(8.dp)
@@ -147,7 +173,7 @@ fun ProductCardTemuStyle(product: Product) {
                         text = "Rs: ${product.originalPrice}",
                         fontSize = 12.sp,
                         color = Color.Gray,
-                        style = LocalTextStyle.current.copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough)
+                        style = LocalTextStyle.current.copy(textDecoration = TextDecoration.LineThrough)
                     )
                 }
                 if (product.discountPercent != null && product.discountPercent > 0) {
