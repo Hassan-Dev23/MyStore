@@ -15,15 +15,18 @@ import com.example.mystore.domain.useCases.GetProductByIDUseCase
 import com.example.mystore.domain.useCases.GetProductsByCategoryUseCase
 import com.example.mystore.domain.useCases.LoginUserUseCase
 import com.example.mystore.domain.useCases.RegisterUserUseCase
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ShopViewModel @Inject constructor(
+    private val firebaseAuth: FirebaseAuth,
     private val registerUserUseCase: RegisterUserUseCase,
     private val loginUserUseCase: LoginUserUseCase,
     private val getAllCategoriesUseCase: GetAllCategoriesUseCase,
@@ -34,6 +37,8 @@ class ShopViewModel @Inject constructor(
 
 
 ) : ViewModel() {
+    private val _isLoggedIn = MutableStateFlow(firebaseAuth.currentUser != null)
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
     //UI States
     private val _signUpState = MutableStateFlow<UIState<String>>(UIState.Empty)
     val signUpState = _signUpState.asStateFlow()
@@ -58,7 +63,18 @@ class ShopViewModel @Inject constructor(
 
 
     init {
-        loadHomeData()
+
+        firebaseAuth.addAuthStateListener {
+            _isLoggedIn.value = it.currentUser != null
+            if (_isLoggedIn.value) {
+                loadHomeData()
+            } else {
+                _homeScreenState.value = CombineUState.Empty
+            }
+        }
+    }
+    fun logout() {
+        firebaseAuth.signOut()
     }
 
     //    Functions For Ui States

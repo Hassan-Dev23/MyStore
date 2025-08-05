@@ -1,7 +1,7 @@
 package com.example.mystore.presentation.navigation
 
-import com.example.mystore.presentation.screens.HomeScreen
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
@@ -30,12 +31,14 @@ import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.example.mystore.presentation.screens.AllCategoryScreenUI
 import com.example.mystore.presentation.screens.AllProductsScreenUI
+import com.example.mystore.presentation.screens.HomeScreen
 import com.example.mystore.presentation.screens.ProductDetailScreenUI
 import com.example.mystore.presentation.screens.ProductsByCategoryScreenUI
+import com.example.mystore.presentation.viewModel.ShopViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NestedGraph(onSettingClick: () -> Unit) {
+fun NestedGraph(viewModel : ShopViewModel = hiltViewModel(), onSettingClick: () -> Unit) {
     val backStack = rememberNavBackStack<BottomBarScreens>(BottomBarScreens.Home)
 
     var currentBottomBarScreen: BottomBarScreens by rememberSaveable(
@@ -86,12 +89,24 @@ fun NestedGraph(onSettingClick: () -> Unit) {
             ),
             entryProvider = entryProvider {
                 entry<BottomBarScreens.Home> {
-                    HomeScreen(paddings = paddingValues, backStack = backStack)
+                    HomeScreen(innerPadding = paddingValues, backStack = backStack)
                 }
                 entry<BottomBarScreens.Cart> {
 
                 }
                 entry<BottomBarScreens.Profile> {
+
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column {
+                            Text("This is Profile Screen!")
+                            Spacer(Modifier.height(10.dp))
+                            Button(onClick = {
+                                viewModel.logout()
+                            }) {
+                                Text("Logout")
+                            }
+                        }
+                    }
 
                 }
                 entry<BottomBarScreens.Wishlist> {

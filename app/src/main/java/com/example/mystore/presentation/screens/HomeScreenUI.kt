@@ -23,7 +23,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.KeyboardDoubleArrowRight
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -62,7 +61,7 @@ import com.example.mystore.presentation.viewModel.ShopViewModel
 @Composable
 fun HomeScreen(
     viewModel: ShopViewModel = hiltViewModel(),
-    paddings: PaddingValues,
+    innerPadding: PaddingValues,
     backStack: NavBackStack
 ) {
     val homeScreenState by viewModel.homeScreenState.collectAsStateWithLifecycle()
@@ -74,8 +73,8 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(
-                top = paddings.calculateTopPadding(),
-                bottom = paddings.calculateBottomPadding()
+                top = innerPadding.calculateTopPadding(),
+                bottom = innerPadding.calculateBottomPadding()
             )
     ) {
         // Search bar section with fixed position
