@@ -29,6 +29,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.example.mystore.presentation.screens.AllCategoryScreenUI
+import com.example.mystore.presentation.screens.AllProductsScreenUI
 import com.example.mystore.presentation.screens.ProductDetailScreenUI
 import com.example.mystore.presentation.screens.ProductsByCategoryScreenUI
 
@@ -96,7 +97,13 @@ fun NestedGraph(onSettingClick: () -> Unit) {
                 entry<BottomBarScreens.Wishlist> {
 
                 }
-
+                entry<OtherScreen.AllProducts> {
+                    AllProductsScreenUI(
+                        search = it.searchQuery,
+                        paddings = paddingValues,
+                        backStack = backStack
+                    )
+                }
                 entry<OtherScreen.AllCategory> {
                     AllCategoryScreenUI(
                         paddingValues,
@@ -104,7 +111,11 @@ fun NestedGraph(onSettingClick: () -> Unit) {
                     )
                 }
                 entry<OtherScreen.ProductsByCategory> {
-                    ProductsByCategoryScreenUI(it.category, paddingValues)
+                    ProductsByCategoryScreenUI(
+                        it.category,
+                        backStack = backStack,
+                        paddings = paddingValues
+                    )
                 }
                 entry<OtherScreen.ProductDetails> {
                     ProductDetailScreenUI(

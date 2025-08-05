@@ -18,9 +18,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -41,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,33 +62,69 @@ fun HomeScreen(
     paddings: PaddingValues,
     backStack: NavBackStack
 ) {
-
     val homeScreenState by viewModel.homeScreenState.collectAsStateWithLifecycle()
 
-
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
             .padding(paddings)
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
-
         // Search Bar and Notification Icon
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = searchQuery,
+                onValueChange = {
+                    searchQuery = it
+                    isSearchActive = true
+                },
                 placeholder = { Text("Search") },
+                leadingIcon = {
+                    if (isSearchActive || searchQuery.isNotEmpty()) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search Icon"
+                        )
+                    }
+                },
+                singleLine = true,
                 modifier = Modifier
                     .weight(1f)
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = {
+                            backStack.add(
+                                OtherScreen.AllProducts(searchQuery = searchQuery)
+                            )
+                            isSearchActive = false
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search"
+                            )
+                        }
+                    }
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        if (searchQuery.isNotEmpty()) {
+                            backStack.add(
+                                OtherScreen.AllProducts(searchQuery = searchQuery)
+                            )
+                            isSearchActive = false
+                        }
+                    }
+                )
             )
             Spacer(modifier = Modifier.width(8.dp))
             IconButton(onClick = { }) {
@@ -122,9 +162,11 @@ fun HomeScreen(
                         Surface(
                             shape = CircleShape,
                             color = Color(0xFFF5F5F5),
-                            modifier = Modifier.size(60.dp).clickable{
-                                backStack.add(OtherScreen.ProductsByCategory(it.name))
-                            }
+                            modifier = Modifier
+                                .size(60.dp)
+                                .clickable {
+                                    backStack.add(OtherScreen.ProductsByCategory(it.name))
+                                }
                         ) {
                             AsyncImage(
                                 model = it.imageUrl,
@@ -148,9 +190,11 @@ fun HomeScreen(
                 items(productData) {
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.size(width = 180.dp, height = 220.dp).clickable{
-                            backStack.add(OtherScreen.ProductDetails(it.id))
-                        },
+                        modifier = Modifier
+                            .size(width = 180.dp, height = 220.dp)
+                            .clickable {
+                                backStack.add(OtherScreen.ProductDetails(it.id))
+                            },
                         color = Color.LightGray
                     ) {
                         // Placeholder for banner
@@ -174,7 +218,13 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Flash Sale", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text("See more", color = Color.Red, fontSize = 14.sp)
+                Text(
+                    "See more",
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.clickable {
+                        backStack.add(OtherScreen.AllProducts())
+                    })
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -185,9 +235,11 @@ fun HomeScreen(
                 items(productData) { product ->
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.width(160.dp).clickable{
-                            backStack.add(OtherScreen.ProductDetails(product.id))
-                        },
+                        modifier = Modifier
+                            .width(160.dp)
+                            .clickable {
+                                backStack.add(OtherScreen.ProductDetails(product.id))
+                            },
                         color = Color.White,
                         tonalElevation = 2.dp
                     ) {
@@ -264,7 +316,5 @@ fun HomeScreen(
                 }
             )
         }
-
     }
 }
-

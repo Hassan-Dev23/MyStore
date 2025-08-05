@@ -93,5 +93,7 @@ sealed class OtherScreen : NavKey {
     data object OrderHistory : OtherScreen()
     @Serializable
     data class ProductsByCategory(val category : String ) : OtherScreen()
+    @Serializable
+    data class AllProducts(val searchQuery : String = "" ) : OtherScreen()
 
 }

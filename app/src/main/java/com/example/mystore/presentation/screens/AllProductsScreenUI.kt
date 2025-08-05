@@ -31,17 +31,17 @@ import com.example.mystore.presentation.navigation.OtherScreen
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ProductsByCategoryScreenUI(
-    category: String,
+fun AllProductsScreenUI(
+    search: String = "",
     paddings: PaddingValues,
     viewModel: ShopViewModel = hiltViewModel(),
     backStack: NavBackStack
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-    val productsState by viewModel.getProductsByCategoryState.collectAsStateWithLifecycle()
+    var searchQuery by remember { mutableStateOf(String()) }
+    val productsState by viewModel.getAllProductsState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(category) {
-        viewModel.getProductsByCategory(category)
+    LaunchedEffect(Unit) {
+        viewModel.getAllProducts()
     }
 
     Column(
@@ -62,19 +62,7 @@ fun ProductsByCategoryScreenUI(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        val title = when (productsState) {
-            is UIState.Success<*> -> {
-                val products = (productsState as UIState.Success<List<Product>>).data
-                if (products.isNotEmpty()) "Products in \"${products.first().category}\"" else "Products"
-            }
-
-            else -> "Products"
-        }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
+        // Display the products based on the state
 
         when (productsState) {
             is UIState.Loading -> {
@@ -109,7 +97,7 @@ fun ProductsByCategoryScreenUI(
                                 ignoreCase = true
                             )
                         }) { product ->
-                            ProductCardTemuStyle(product){
+                            ProductCard(product){
                                 backStack.add(
                                     OtherScreen.ProductDetails(
                                         productId = product.id
@@ -127,7 +115,7 @@ fun ProductsByCategoryScreenUI(
 }
 
 @Composable
-fun ProductCardTemuStyle(product: Product, onClick: () -> Unit) {
+fun ProductCard(product: Product, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .clickable(
@@ -136,7 +124,7 @@ fun ProductCardTemuStyle(product: Product, onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(bottom = 4.dp)
             .clip(RoundedCornerShape(16.dp))
-            ,
+        ,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(8.dp)
