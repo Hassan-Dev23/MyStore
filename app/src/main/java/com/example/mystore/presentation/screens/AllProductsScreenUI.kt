@@ -37,7 +37,7 @@ fun AllProductsScreenUI(
     viewModel: ShopViewModel = hiltViewModel(),
     backStack: NavBackStack
 ) {
-    var searchQuery by remember { mutableStateOf(String()) }
+    var searchQuery by remember { mutableStateOf(search) }
     val productsState by viewModel.getAllProductsState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
