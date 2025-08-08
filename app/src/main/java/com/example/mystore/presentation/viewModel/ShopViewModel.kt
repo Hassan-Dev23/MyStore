@@ -4,10 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mystore.common.ResultState
+import com.example.mystore.domain.modelClasses.CartModel
 import com.example.mystore.domain.modelClasses.CategoryModel
 import com.example.mystore.domain.modelClasses.Product
 import com.example.mystore.domain.modelClasses.UserCredentialsModel
 import com.example.mystore.domain.modelClasses.UserDetailsModel
+import com.example.mystore.domain.modelClasses.WishListModel
+import com.example.mystore.domain.useCases.CartUseCase
 import com.example.mystore.domain.useCases.GetAllCategoriesUseCase
 import com.example.mystore.domain.useCases.GetAllProductsUseCase
 import com.example.mystore.domain.useCases.GetHomeCategoriesUseCase
@@ -15,6 +18,7 @@ import com.example.mystore.domain.useCases.GetProductByIDUseCase
 import com.example.mystore.domain.useCases.GetProductsByCategoryUseCase
 import com.example.mystore.domain.useCases.LoginUserUseCase
 import com.example.mystore.domain.useCases.RegisterUserUseCase
+import com.example.mystore.domain.useCases.WishListUseCase
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -33,12 +37,15 @@ class ShopViewModel @Inject constructor(
     private val getProductsByCategoryUseCase: GetProductsByCategoryUseCase,
     private val getProductByIdUseCase: GetProductByIDUseCase,
     private val getAllProductsUseCase: GetAllProductsUseCase,
-    private val getHomeCategoriesUseCase: GetHomeCategoriesUseCase
+    private val getHomeCategoriesUseCase: GetHomeCategoriesUseCase,
+    private val wishListUseCase: WishListUseCase,
+    private val cartUseCase: CartUseCase
 
 
 ) : ViewModel() {
     private val _isLoggedIn = MutableStateFlow(firebaseAuth.currentUser != null)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
+
     //UI States
     private val _signUpState = MutableStateFlow<UIState<String>>(UIState.Empty)
     val signUpState = _signUpState.asStateFlow()
@@ -55,6 +62,25 @@ class ShopViewModel @Inject constructor(
     val getProductsByCategoryState = _getProductsByCategoryState.asStateFlow()
     private val _getProductByIdState = MutableStateFlow<UIState<Product>>(UIState.Empty)
     val getProductByIdState = _getProductByIdState.asStateFlow()
+
+    // Wishlist States
+    private val _getWishListState = MutableStateFlow<UIState<List<WishListModel>>>(UIState.Empty)
+    val getWishListState = _getWishListState.asStateFlow()
+
+    private val _addToWishListState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    val addToWishListState = _addToWishListState.asStateFlow()
+    private val _removeFromWishListState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    val removeFromWishListState = _removeFromWishListState.asStateFlow()
+
+    // Cart States
+    private val _getCartListState = MutableStateFlow<UIState<List<CartModel>>>(UIState.Empty)
+    val getCartListState = _getCartListState.asStateFlow()
+    private val _addToCartState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    val addToCartState = _addToCartState.asStateFlow()
+    private val _removeFromCartState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    val removeFromCartState = _removeFromCartState.asStateFlow()
+
+
     private val _homeScreenState =
         MutableStateFlow<CombineUState<List<CategoryModel>, List<Product>>>(
             CombineUState.Empty
@@ -73,6 +99,7 @@ class ShopViewModel @Inject constructor(
             }
         }
     }
+
     fun logout() {
         firebaseAuth.signOut()
     }
@@ -135,15 +162,19 @@ class ShopViewModel @Inject constructor(
                             products.data as List<Product>
                         )
                     }
+
                     categories is ResultState.Error -> {
                         CombineUState.Error("Category Error " + categories.message)
                     }
+
                     products is ResultState.Error -> {
-                        CombineUState.Error("Products Error "+products.message)
+                        CombineUState.Error("Products Error " + products.message)
                     }
+
                     categories is ResultState.Loading || products is ResultState.Loading -> {
                         CombineUState.Loading
                     }
+
                     else -> {
                         CombineUState.Empty
                     }
@@ -237,6 +268,141 @@ class ShopViewModel @Inject constructor(
 
                     is ResultState.Success<*> -> {
                         _getProductByIdState.value = UIState.Success(it.data as Product)
+                    }
+
+                    is ResultState.Empty -> {}
+                }
+            }
+        }
+    }
+
+    fun getWishlistItems() {
+        viewModelScope.launch {
+            wishListUseCase.getWishList(
+                firebaseAuth.currentUser!!.uid
+            ).collect {
+                when (it) {
+                    is ResultState.Error -> {
+                        _getWishListState.value = UIState.Error(it.message)
+                    }
+
+                    is ResultState.Loading -> {
+                        _getWishListState.value = UIState.Loading
+                    }
+
+                    is ResultState.Success<*> -> {
+                        _getWishListState.value = UIState.Success(it.data as List<WishListModel>)
+                    }
+
+                    is ResultState.Empty -> {}
+                }
+            }
+        }
+    }
+
+    fun removeFromWishList(wishListId: String) {
+        viewModelScope.launch {
+            wishListUseCase.removeFromWishList(wishListId).collect {
+                when (it) {
+                    is ResultState.Error -> {
+                        _removeFromWishListState.value = UIState.Error(it.message)
+                    }
+
+                    is ResultState.Loading -> {
+                        _removeFromWishListState.value = UIState.Loading
+                    }
+
+                    is ResultState.Success<*> -> {
+                        _removeFromWishListState.value = UIState.Success(it.data as String)
+                    }
+
+                    is ResultState.Empty -> {}
+                }
+            }
+        }
+    }
+
+    fun addToWishList(wishListProduct: WishListModel) {
+        viewModelScope.launch {
+            wishListUseCase.addToWishList(wishListProduct).collect {
+                when (it) {
+                    is ResultState.Error -> {
+                        _addToWishListState.value = UIState.Error(it.message)
+                    }
+
+                    is ResultState.Loading -> {
+                        _addToWishListState.value = UIState.Loading
+                    }
+
+                    is ResultState.Success<*> -> {
+                        _addToWishListState.value = UIState.Success(it.data as String)
+                    }
+
+                    is ResultState.Empty -> {}
+                }
+            }
+        }
+    }
+
+    fun getCartItems() {
+        viewModelScope.launch {
+            cartUseCase.getCart(
+                firebaseAuth.currentUser!!.uid
+            ).collect {
+                when (it) {
+                    is ResultState.Error -> {
+                        _getCartListState.value = UIState.Error(it.message)
+                    }
+
+                    is ResultState.Loading -> {
+                        _getCartListState.value = UIState.Loading
+                    }
+
+                    is ResultState.Success<*> -> {
+                        _getCartListState.value = UIState.Success(it.data as List<CartModel>)
+                    }
+
+                    is ResultState.Empty -> {}
+                }
+            }
+        }
+    }
+    fun addToCart(cartProduct: CartModel) {
+        viewModelScope.launch {
+            cartUseCase.addToCart(cartProduct).collect {
+                when (it) {
+                    is ResultState.Error -> {
+                        _addToCartState.value = UIState.Error(it.message)
+                    }
+
+                    is ResultState.Loading -> {
+                        _addToCartState.value = UIState.Loading
+                    }
+
+                    is ResultState.Success<*> -> {
+                        _addToCartState.value = UIState.Success(it.data as String)
+                    }
+
+                    is ResultState.Empty -> {}
+                }
+            }
+        }
+    }
+
+    fun removeFromCart(cartId: String) {
+        viewModelScope.launch {
+            cartUseCase.removeFromCart(cartId).collect {
+                when (it) {
+                    is ResultState.Error -> {
+                        _removeFromCartState.value = UIState.Error(it.message)
+                    }
+
+                    is ResultState.Loading -> {
+                        _removeFromCartState.value = UIState.Loading
+                    }
+
+                    is ResultState.Success<*> -> {
+                        _removeFromCartState.value = UIState.Success(it.data as String)
                     }
 
                     is ResultState.Empty -> {}

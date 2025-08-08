@@ -25,8 +25,7 @@ import kotlinx.coroutines.tasks.await
 
 class RepoImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val firebaseFirestore: FirebaseFirestore,
-    private val firebaseStorage: FirebaseStorage
+    private val firebaseFirestore: FirebaseFirestore
 ) : Repo {
     override suspend fun registerUserWithEmailAndPassword(user: UserDetailsModel): Flow<ResultState<String>> =
         callbackFlow {
@@ -309,39 +308,38 @@ class RepoImpl @Inject constructor(
 
     override suspend fun getCartProducts(userId: String): Flow<ResultState<List<CartModel>>> = callbackFlow {
         trySend(ResultState.Loading)
-        try {
-            firebaseFirestore.collection(CART_PATH)
-                .whereEqualTo("userId", userId)
-                .get().addOnSuccessListener { snapshot ->
+
+        val listenerRegistration = firebaseFirestore.collection(CART_PATH)
+            .whereEqualTo("userId", userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(
+                        ResultState.Error(
+                            "Error Message : ${error.message}" + "\n" +
+                                    "Error Cause : ${error.cause}" + "\n" +
+                                    "Error StackTrace : ${error.stackTraceToString()}"
+                        )
+                    )
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
                     val cartProducts = snapshot.documents.mapNotNull { documentSnapshot ->
                         documentSnapshot.toObject(CartModel::class.java)?.apply {
                             id = documentSnapshot.id
                         }
                     }
                     trySend(ResultState.Success(cartProducts))
-                }.addOnFailureListener {
-                    trySend(
-                        ResultState.Error(
-                            "Error Message : ${it.message.toString()}" + "\n" +
-                                    "Error Cause : ${it.cause.toString()}" + "\n" +
-                                    "Error StackTrace : ${it.stackTrace}"
-                        )
-                    )
+                } else {
+                    trySend(ResultState.Success(emptyList()))
                 }
-        } catch (e: Exception) {
-            trySend(
-                ResultState.Error(
-                    "Error Message : ${e.message.toString()}" + "\n" +
-                            "Error Cause : ${e.cause.toString()}" + "\n" +
-                            "Error StackTrace : ${e.stackTrace}"
-                )
-            )
-        }
-        awaitClose {
-            close()
-        }
+            }
 
+        awaitClose {
+            listenerRegistration.remove()
+        }
     }
+
 
     override suspend fun removeProductFromCart(cartId: String): Flow<ResultState<String>> = callbackFlow {
         trySend(ResultState.Loading)
@@ -403,38 +401,38 @@ class RepoImpl @Inject constructor(
 
     override suspend fun getWishlistProducts(userId: String): Flow<ResultState<List<WishListModel>>> = callbackFlow {
         trySend(ResultState.Loading)
-        try {
-            firebaseFirestore.collection(WISHLIST_PATH)
-                .whereEqualTo("userId", userId)
-                .get().addOnSuccessListener { snapshot ->
+
+        val listenerRegistration = firebaseFirestore.collection(WISHLIST_PATH)
+            .whereEqualTo("userId", userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(
+                        ResultState.Error(
+                            "Error Message : ${error.message}" + "\n" +
+                                    "Error Cause : ${error.cause}" + "\n" +
+                                    "Error StackTrace : ${error.stackTraceToString()}"
+                        )
+                    )
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
                     val wishListProducts = snapshot.documents.mapNotNull { documentSnapshot ->
                         documentSnapshot.toObject(WishListModel::class.java)?.apply {
                             id = documentSnapshot.id
                         }
                     }
                     trySend(ResultState.Success(wishListProducts))
-                }.addOnFailureListener {
-                    trySend(
-                        ResultState.Error(
-                            "Error Message : ${it.message.toString()}" + "\n" +
-                                    "Error Cause : ${it.cause.toString()}" + "\n" +
-                                    "Error StackTrace : ${it.stackTrace}"
-                        )
-                    )
+                } else {
+                    trySend(ResultState.Success(emptyList()))
                 }
-        } catch (e: Exception) {
-            trySend(
-                ResultState.Error(
-                    "Error Message : ${e.message.toString()}" + "\n" +
-                            "Error Cause : ${e.cause.toString()}" + "\n" +
-                            "Error StackTrace : ${e.stackTrace}"
-                )
-            )
-        }
+            }
+
         awaitClose {
-            close()
+            listenerRegistration.remove()
         }
     }
+
 
     override suspend fun removeProductFromWishlist(wishListId: String): Flow<ResultState<String>> = callbackFlow {
         trySend(ResultState.Loading)

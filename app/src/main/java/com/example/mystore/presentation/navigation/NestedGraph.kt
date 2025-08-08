@@ -34,11 +34,13 @@ import com.example.mystore.presentation.screens.AllProductsScreenUI
 import com.example.mystore.presentation.screens.HomeScreen
 import com.example.mystore.presentation.screens.ProductDetailScreenUI
 import com.example.mystore.presentation.screens.ProductsByCategoryScreenUI
+import com.example.mystore.presentation.screens.CartScreenUI
+import com.example.mystore.presentation.screens.WishlistScreenUI
 import com.example.mystore.presentation.viewModel.ShopViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NestedGraph(viewModel : ShopViewModel = hiltViewModel(), onSettingClick: () -> Unit) {
+fun NestedGraph(viewModel: ShopViewModel = hiltViewModel(), onSettingClick: () -> Unit) {
     val backStack = rememberNavBackStack<BottomBarScreens>(BottomBarScreens.Home)
 
     var currentBottomBarScreen: BottomBarScreens by rememberSaveable(
@@ -92,7 +94,9 @@ fun NestedGraph(viewModel : ShopViewModel = hiltViewModel(), onSettingClick: () 
                     HomeScreen(innerPadding = paddingValues, backStack = backStack)
                 }
                 entry<BottomBarScreens.Cart> {
-
+                    CartScreenUI(
+                        innerPadding = paddingValues
+                    )
                 }
                 entry<BottomBarScreens.Profile> {
 
@@ -110,7 +114,10 @@ fun NestedGraph(viewModel : ShopViewModel = hiltViewModel(), onSettingClick: () 
 
                 }
                 entry<BottomBarScreens.Wishlist> {
-
+                    WishlistScreenUI(
+                        innerPadding = paddingValues,
+                        backStack = backStack
+                    )
                 }
                 entry<OtherScreen.AllProducts> {
                     AllProductsScreenUI(
