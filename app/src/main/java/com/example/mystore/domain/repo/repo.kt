@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 interface Repo {
     suspend fun registerUserWithEmailAndPassword(user: UserDetailsModel): Flow<ResultState<String>>
     suspend fun loginUserWithEmailAndPassword(user: UserCredentialsModel): Flow<ResultState<String>>
+    suspend fun userDetails(): Flow<ResultState<UserDetailsModel>>
     suspend fun getAllCategories(): Flow<ResultState<List<CategoryModel>>>
     suspend fun getAllProducts(): Flow<ResultState<List<Product>>>
     suspend fun getProductsByCategory(category: String): Flow<ResultState<List<Product>>>
@@ -24,6 +25,6 @@ interface Repo {
     suspend fun addProductToWishlist(wishListProduct: WishListModel): Flow<ResultState<String>>
     suspend fun getWishlistProducts(userId: String): Flow<ResultState<List<WishListModel>>>
     suspend fun removeProductFromWishlist(wishListId: String): Flow<ResultState<String>>
-
-
+    suspend fun uploadProfileImage(imageUri: String): Flow<ResultState<String>>
+    suspend fun updateUserProfile(userDetails: UserDetailsModel): Flow<ResultState<String>>
 }

@@ -1,6 +1,5 @@
 package com.example.mystore.presentation.viewModel
 
-import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mystore.common.ResultState
@@ -18,7 +17,9 @@ import com.example.mystore.domain.useCases.GetProductByIDUseCase
 import com.example.mystore.domain.useCases.GetProductsByCategoryUseCase
 import com.example.mystore.domain.useCases.LoginUserUseCase
 import com.example.mystore.domain.useCases.RegisterUserUseCase
+import com.example.mystore.domain.useCases.UserDetailsUseCase
 import com.example.mystore.domain.useCases.WishListUseCase
+import com.example.mystore.domain.useCases.ProfileManagementUseCase
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -33,15 +34,15 @@ class ShopViewModel @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val registerUserUseCase: RegisterUserUseCase,
     private val loginUserUseCase: LoginUserUseCase,
+    private val userDetailsUseCase: UserDetailsUseCase,
     private val getAllCategoriesUseCase: GetAllCategoriesUseCase,
     private val getProductsByCategoryUseCase: GetProductsByCategoryUseCase,
     private val getProductByIdUseCase: GetProductByIDUseCase,
     private val getAllProductsUseCase: GetAllProductsUseCase,
     private val getHomeCategoriesUseCase: GetHomeCategoriesUseCase,
     private val wishListUseCase: WishListUseCase,
-    private val cartUseCase: CartUseCase
-
-
+    private val cartUseCase: CartUseCase,
+    private val profileManagementUseCase: ProfileManagementUseCase,
 ) : ViewModel() {
     private val _isLoggedIn = MutableStateFlow(firebaseAuth.currentUser != null)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
@@ -51,7 +52,8 @@ class ShopViewModel @Inject constructor(
     val signUpState = _signUpState.asStateFlow()
     private val _loginUserState = MutableStateFlow<UIState<String>>(UIState.Empty)
     val loginUserState = _loginUserState.asStateFlow()
-
+    private val _userDetailsState = MutableStateFlow<UIState<UserDetailsModel>>(UIState.Empty)
+    val userDetailsState = _userDetailsState.asStateFlow()
     private val _getAllCategoriesState =
         MutableStateFlow<UIState<List<CategoryModel>>>(UIState.Empty)
     val categoriesState = _getAllCategoriesState.asStateFlow()
@@ -80,6 +82,12 @@ class ShopViewModel @Inject constructor(
     private val _removeFromCartState = MutableStateFlow<UIState<String>>(UIState.Empty)
     val removeFromCartState = _removeFromCartState.asStateFlow()
 
+    // Profile Management States
+    private val _updateProfileState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    val updateProfileState = _updateProfileState.asStateFlow()
+
+    private val _uploadImageState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    val uploadImageState = _uploadImageState.asStateFlow()
 
     private val _homeScreenState =
         MutableStateFlow<CombineUState<List<CategoryModel>, List<Product>>>(
@@ -149,6 +157,27 @@ class ShopViewModel @Inject constructor(
         }
     }
 
+    fun userDetails() {
+        viewModelScope.launch {
+            userDetailsUseCase.invoke().collect {
+                when (it) {
+                    is ResultState.Error -> {
+                        _userDetailsState.value = UIState.Error(it.message)
+                    }
+
+                    is ResultState.Loading -> {
+                        _userDetailsState.value = UIState.Loading
+                    }
+
+                    is ResultState.Success<*> -> {
+                        _userDetailsState.value = UIState.Success(it.data as UserDetailsModel)
+                    }
+
+                    is ResultState.Empty -> {}
+                }
+            }
+        }
+    }
     fun loadHomeData() {
         viewModelScope.launch {
             combine(
@@ -411,7 +440,31 @@ class ShopViewModel @Inject constructor(
         }
     }
 
+    fun updateUserProfile(userDetails: UserDetailsModel) {
+        viewModelScope.launch {
+            profileManagementUseCase.updateProfile(userDetails).collect {
+                when (it) {
+                    is ResultState.Loading -> _updateProfileState.value = UIState.Loading
+                    is ResultState.Success<*> -> _updateProfileState.value = UIState.Success(it.data as String)
+                    is ResultState.Error -> _updateProfileState.value = UIState.Error(it.message)
+                    is ResultState.Empty -> _updateProfileState.value = UIState.Empty
+                }
+            }
+        }
+    }
 
+    fun uploadProfileImage(imageUri: String) {
+        viewModelScope.launch {
+            profileManagementUseCase.uploadProfileImage(imageUri).collect {
+                when (it) {
+                    is ResultState.Loading -> _uploadImageState.value = UIState.Loading
+                    is ResultState.Success<*> -> _uploadImageState.value = UIState.Success(it.data as String)
+                    is ResultState.Error -> _uploadImageState.value = UIState.Error(it.message)
+                    is ResultState.Empty -> _uploadImageState.value = UIState.Empty
+                }
+            }
+        }
+    }
 }
 
 sealed class UIState<out T> {

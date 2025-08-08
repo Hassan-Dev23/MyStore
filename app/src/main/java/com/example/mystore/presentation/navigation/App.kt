@@ -25,8 +25,10 @@ fun App(viewModel: ShopViewModel = hiltViewModel()) {
     val isUserLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
     val backStack = rememberNavBackStack(Screen.Auth)
     if (isUserLoggedIn){
+        backStack.removeLastOrNull()
         backStack.add(Screen.HomeGraph)
     } else {
+        backStack.removeLastOrNull()
         backStack.add(Screen.Auth)
     }
         NavDisplay(

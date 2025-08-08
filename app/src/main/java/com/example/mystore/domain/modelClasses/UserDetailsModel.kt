@@ -1,6 +1,7 @@
 package com.example.mystore.domain.modelClasses
 
 data class UserDetailsModel(
+    var id : String = "",
     val firstName: String = "",
     val lastName: String = "",
     val email: String = "",

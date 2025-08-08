@@ -1,5 +1,6 @@
 package com.example.mystore.data.repoImpl
 
+import android.net.Uri
 import com.example.mystore.common.CART_PATH
 import com.example.mystore.common.CATEGORY_PATH
 import com.example.mystore.common.PRODUCT_PATH
@@ -16,6 +17,7 @@ import com.example.mystore.domain.repo.Repo
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.firestore.SetOptions
 import jakarta.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -25,7 +27,8 @@ import kotlinx.coroutines.tasks.await
 
 class RepoImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val firebaseFirestore: FirebaseFirestore
+    private val firebaseFirestore: FirebaseFirestore,
+    private val firebaseStorage: FirebaseStorage
 ) : Repo {
     override suspend fun registerUserWithEmailAndPassword(user: UserDetailsModel): Flow<ResultState<String>> =
         callbackFlow {
@@ -100,6 +103,32 @@ class RepoImpl @Inject constructor(
 
 
         }
+
+    override suspend fun userDetails(): Flow<ResultState<UserDetailsModel>> = callbackFlow {
+        trySend(ResultState.Loading)
+        try {
+            val documentSnapshot = firebaseFirestore.collection(USER_COLLECTION).document(firebaseAuth.currentUser!!.uid).get().await()
+            val userDetails = documentSnapshot.toObject(UserDetailsModel::class.java)
+
+            if (userDetails != null) {
+                userDetails.id = documentSnapshot.id // Set the ID from the document
+                trySend(ResultState.Success(userDetails))
+            } else {
+                trySend(ResultState.Error("User not found"))
+            }
+        } catch (e: Exception) {
+            trySend(
+                ResultState.Error(
+                    "Error Message : ${e.message.toString()}" + "\n" +
+                            "Error Cause : ${e.cause.toString()}" + "\n" +
+                            "Error StackTrace : ${e.stackTrace}"
+                )
+            )
+        }
+        awaitClose {
+            close()
+        }
+    }
 
     override suspend fun getAllCategories(): Flow<ResultState<List<CategoryModel>>> = callbackFlow {
         trySend(ResultState.Loading)
@@ -461,6 +490,55 @@ class RepoImpl @Inject constructor(
         awaitClose {
             close()
         }
+    }
+
+    override suspend fun uploadProfileImage(imageUri: String): Flow<ResultState<String>> = callbackFlow {
+        trySend(ResultState.Loading)
+        try {
+            val storageRef = firebaseStorage.reference
+                .child("profile_images")
+                .child(firebaseAuth.currentUser?.uid ?: "")
+                .child("profile_${System.currentTimeMillis()}.jpg")
+
+            val uploadTask = storageRef.putFile(Uri.parse(imageUri))
+            uploadTask.addOnSuccessListener {
+                storageRef.downloadUrl.addOnSuccessListener { uri ->
+                    // Update the user's profile image URL in Firestore
+                    firebaseFirestore.collection(USER_COLLECTION)
+                        .document(firebaseAuth.currentUser?.uid ?: "")
+                        .update("profileImage", uri.toString())
+                        .addOnSuccessListener {
+                            trySend(ResultState.Success(uri.toString()))
+                        }
+                        .addOnFailureListener { e ->
+                            trySend(ResultState.Error("Failed to update profile image URL: ${e.message}"))
+                        }
+                }
+            }.addOnFailureListener { e ->
+                trySend(ResultState.Error("Failed to upload image: ${e.message}"))
+            }
+        } catch (e: Exception) {
+            trySend(ResultState.Error("Error uploading image: ${e.message}"))
+        }
+        awaitClose { }
+    }
+
+    override suspend fun updateUserProfile(userDetails: UserDetailsModel): Flow<ResultState<String>> = callbackFlow {
+        trySend(ResultState.Loading)
+        try {
+            firebaseFirestore.collection(USER_COLLECTION)
+                .document(firebaseAuth.currentUser?.uid ?: "")
+                .set(userDetails, SetOptions.merge())
+                .addOnSuccessListener {
+                    trySend(ResultState.Success("Profile updated successfully"))
+                }
+                .addOnFailureListener { e ->
+                    trySend(ResultState.Error("Failed to update profile: ${e.message}"))
+                }
+        } catch (e: Exception) {
+            trySend(ResultState.Error("Error updating profile: ${e.message}"))
+        }
+        awaitClose { }
     }
 
 
