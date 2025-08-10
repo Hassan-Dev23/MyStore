@@ -151,7 +151,7 @@ fun AllCategoryScreenUI(
                     }
                 }
             }
-            is UIState.Empty -> {}
+            else -> Unit
         }
     }
 }

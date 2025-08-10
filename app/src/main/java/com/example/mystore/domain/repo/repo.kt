@@ -27,4 +27,5 @@ interface Repo {
     suspend fun removeProductFromWishlist(wishListId: String): Flow<ResultState<String>>
     suspend fun uploadProfileImage(imageUri: String): Flow<ResultState<String>>
     suspend fun updateUserProfile(userDetails: UserDetailsModel): Flow<ResultState<String>>
+    suspend fun updateCartItemQuantity(cartId: String, newQuantity: Int): Flow<ResultState<String>>
 }

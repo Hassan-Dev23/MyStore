@@ -79,6 +79,7 @@ fun ProductDetailScreenUI(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(end = 16.dp, start = 16.dp)
                 .padding(paddingValues)
         ) {
             when (productState) {
@@ -224,19 +225,22 @@ fun ProductDetailScreenUI(
                                 },
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
                             ) {
                                 when (addToCartState) {
                                     is UIState.Loading -> {
                                         CircularProgressIndicator(
                                             modifier = Modifier.size(24.dp),
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            color = MaterialTheme.colorScheme.onPrimary
                                         )
                                     }
                                     else -> {
                                         Text(
                                             "Add to Cart",
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            color = MaterialTheme.colorScheme.onPrimary
                                         )
                                     }
                                 }

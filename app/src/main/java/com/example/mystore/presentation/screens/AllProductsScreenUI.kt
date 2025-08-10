@@ -4,10 +4,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridCells.*
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,8 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -28,8 +33,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import com.example.mystore.presentation.navigation.OtherScreen
+import com.example.mystore.presentation.navigation.OtherScreen.*
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AllProductsScreenUI(
     search: String = "",
@@ -39,6 +45,8 @@ fun AllProductsScreenUI(
 ) {
     var searchQuery by remember { mutableStateOf(search) }
     val productsState by viewModel.getAllProductsState.collectAsStateWithLifecycle()
+    val focusManager = LocalFocusManager.current
+    var active by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.getAllProducts()
@@ -47,139 +55,224 @@ fun AllProductsScreenUI(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
-            .padding(paddings)
+            .padding(
+                top = paddings.calculateTopPadding(),
+                bottom = paddings.calculateBottomPadding()
+            )
     ) {
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Search products") },
-            leadingIcon = {
-                Icon(Icons.Default.Search, contentDescription = null)
+        SearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            onSearch = {
+                focusManager.clearFocus()
+                active = false
             },
-            shape = RoundedCornerShape(12.dp)
-        )
+            active = active,
+            onActiveChange = { active = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            placeholder = {
+                Text(
+                    "Search products...",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            trailingIcon = if (searchQuery.isNotEmpty()) {
+                {
+                    IconButton(onClick = {
+                        searchQuery = ""
+                        active = false
+                        focusManager.clearFocus()
+                    }) {
+                        Icon(
+                            Icons.Default.Clear,
+                            contentDescription = "Clear search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else null,
+            shape = RoundedCornerShape(16.dp),
+            colors = SearchBarDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                dividerColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+            )
+        ) {
+            // Search suggestions can go here
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Display the products based on the state
-
-        when (productsState) {
-            is UIState.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-            }
-
-            is UIState.Error -> {
-                Text(
-                    text = (productsState as UIState.Error).message,
-                    color = Color.Red,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-            }
-
-            is UIState.Success<*> -> {
-                val products = (productsState as UIState.Success<List<Product>>).data
-                if (products.isEmpty()) {
-                    Text(
-                        "No products found.",
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (productsState) {
+                is UIState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.primary
                     )
-                } else {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(products.filter {
-                            it.name.contains(
-                                searchQuery,
-                                ignoreCase = true
+                }
+
+                is UIState.Error -> {
+                    ErrorView(
+                        message = (productsState as UIState.Error).message,
+                        onRetry = { viewModel.getAllProducts() }
+                    )
+                }
+
+                is UIState.Success -> {
+                    val products = (productsState as UIState.Success<List<Product>>).data
+                    val filteredProducts = products.filter {
+                        it.name.contains(searchQuery, ignoreCase = true)
+                    }
+
+                    if (filteredProducts.isEmpty()) {
+                        EmptyResultsView(searchQuery)
+                    } else {
+                        LazyVerticalGrid(
+                            columns = Fixed(2),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(16.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(filteredProducts) { product ->
+                                ProductGridCard(
+                                    product = product,
+                                    onClick = {
+                                        backStack.add(ProductDetails(product.id))
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                else -> Unit
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProductGridCard(
+    product: Product,
+    onClick: () -> Unit
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column {
+            AsyncImage(
+                model = product.imageUrls?.firstOrNull(),
+                contentDescription = product.name,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Column(
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = product.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = "$${product.price}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+
+                product.discountPercent?.let {
+                    if (it > 0) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "$${product.originalPrice}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textDecoration = TextDecoration.LineThrough
                             )
-                        }) { product ->
-                            ProductCard(product){
-                                backStack.add(
-                                    OtherScreen.ProductDetails(
-                                        productId = product.id
-                                    )
+
+                            Surface(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = "-${product.discountPercent}%",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                                 )
                             }
                         }
                     }
                 }
             }
-
-            is UIState.Empty -> {}
         }
     }
 }
 
 @Composable
-fun ProductCard(product: Product, onClick: () -> Unit) {
-    Card(
+private fun EmptyResultsView(query: String) {
+    Column(
         modifier = Modifier
-            .clickable(
-                onClick = onClick
-            )
-            .fillMaxWidth()
-            .padding(bottom = 4.dp)
-            .clip(RoundedCornerShape(16.dp))
-        ,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(8.dp)
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            modifier = Modifier.padding(8.dp)
-        ) {
-            AsyncImage(
-                model = product.imageUrls?.firstOrNull(),
-                contentDescription = product.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .height(120.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-            )
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = if (query.isEmpty())
+                "No products available"
+            else
+                "No products found for \"$query\"",
+            style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center
+        )
+
+        if (query.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
+
             Text(
-                product.name,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                maxLines = 2
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Rs: ${product.price}",
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 15.sp
-                )
-                if (product.originalPrice != null && product.originalPrice > product.price) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Rs: ${product.originalPrice}",
-                        fontSize = 12.sp,
-                        color = Color.Gray,
-                        style = LocalTextStyle.current.copy(textDecoration = TextDecoration.LineThrough)
-                    )
-                }
-                if (product.discountPercent != null && product.discountPercent > 0) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "-${product.discountPercent}%",
-                        fontSize = 12.sp,
-                        color = Color(0xFFE57373),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = product.brand,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                "Try searching with different keywords",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
             )
         }
     }

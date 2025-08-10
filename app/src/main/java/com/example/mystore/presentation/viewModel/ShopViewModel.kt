@@ -20,6 +20,7 @@ import com.example.mystore.domain.useCases.RegisterUserUseCase
 import com.example.mystore.domain.useCases.UserDetailsUseCase
 import com.example.mystore.domain.useCases.WishListUseCase
 import com.example.mystore.domain.useCases.ProfileManagementUseCase
+import com.example.mystore.presentation.viewModel.UIState.*
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -48,45 +49,45 @@ class ShopViewModel @Inject constructor(
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
     //UI States
-    private val _signUpState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    private val _signUpState = MutableStateFlow<UIState<String>>(UIState.Loading)
     val signUpState = _signUpState.asStateFlow()
-    private val _loginUserState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    private val _loginUserState = MutableStateFlow<UIState<String>>(UIState.Loading)
     val loginUserState = _loginUserState.asStateFlow()
-    private val _userDetailsState = MutableStateFlow<UIState<UserDetailsModel>>(UIState.Empty)
+    private val _userDetailsState = MutableStateFlow<UIState<UserDetailsModel>>(UIState.Loading)
     val userDetailsState = _userDetailsState.asStateFlow()
     private val _getAllCategoriesState =
-        MutableStateFlow<UIState<List<CategoryModel>>>(UIState.Empty)
+        MutableStateFlow<UIState<List<CategoryModel>>>(UIState.Loading)
     val categoriesState = _getAllCategoriesState.asStateFlow()
-    private val _getAllProductsState = MutableStateFlow<UIState<List<Product>>>(UIState.Empty)
+    private val _getAllProductsState = MutableStateFlow<UIState<List<Product>>>(UIState.Loading)
     val getAllProductsState = _getAllProductsState.asStateFlow()
     private val _getProductsByCategoryState =
-        MutableStateFlow<UIState<List<Product>>>(UIState.Empty)
+        MutableStateFlow<UIState<List<Product>>>(UIState.Loading)
     val getProductsByCategoryState = _getProductsByCategoryState.asStateFlow()
-    private val _getProductByIdState = MutableStateFlow<UIState<Product>>(UIState.Empty)
+    private val _getProductByIdState = MutableStateFlow<UIState<Product>>(UIState.Loading)
     val getProductByIdState = _getProductByIdState.asStateFlow()
 
     // Wishlist States
-    private val _getWishListState = MutableStateFlow<UIState<List<WishListModel>>>(UIState.Empty)
+    private val _getWishListState = MutableStateFlow<UIState<List<WishListModel>>>(UIState.Loading)
     val getWishListState = _getWishListState.asStateFlow()
 
-    private val _addToWishListState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    private val _addToWishListState = MutableStateFlow<UIState<String>>(UIState.Loading)
     val addToWishListState = _addToWishListState.asStateFlow()
-    private val _removeFromWishListState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    private val _removeFromWishListState = MutableStateFlow<UIState<String>>(UIState.Loading)
     val removeFromWishListState = _removeFromWishListState.asStateFlow()
 
     // Cart States
-    private val _getCartListState = MutableStateFlow<UIState<List<CartModel>>>(UIState.Empty)
+    private val _getCartListState = MutableStateFlow<UIState<List<CartModel>>>(UIState.Loading)
     val getCartListState = _getCartListState.asStateFlow()
-    private val _addToCartState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    private val _addToCartState = MutableStateFlow<UIState<String>>(Empty)
     val addToCartState = _addToCartState.asStateFlow()
-    private val _removeFromCartState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    private val _removeFromCartState = MutableStateFlow<UIState<String>>(UIState.Loading)
     val removeFromCartState = _removeFromCartState.asStateFlow()
 
     // Profile Management States
-    private val _updateProfileState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    private val _updateProfileState = MutableStateFlow<UIState<String>>(UIState.Loading)
     val updateProfileState = _updateProfileState.asStateFlow()
 
-    private val _uploadImageState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    private val _uploadImageState = MutableStateFlow<UIState<String>>(UIState.Loading)
     val uploadImageState = _uploadImageState.asStateFlow()
 
     private val _homeScreenState =
@@ -94,6 +95,9 @@ class ShopViewModel @Inject constructor(
             CombineUState.Empty
         )
     val homeScreenState = _homeScreenState.asStateFlow()
+
+    private val _updateCartItemState = MutableStateFlow<UIState<String>>(UIState.Loading)
+    val updateCartItemState = _updateCartItemState.asStateFlow()
 
 
     init {
@@ -128,8 +132,8 @@ class ShopViewModel @Inject constructor(
                     is ResultState.Success<*> -> {
                         _signUpState.value = UIState.Success(it.data as String)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -140,18 +144,18 @@ class ShopViewModel @Inject constructor(
             loginUserUseCase.invoke(user).collect {
                 when (it) {
                     is ResultState.Error -> {
-                        _loginUserState.value = UIState.Error(it.message)
+                        _loginUserState.value = Error(it.message)
                     }
 
                     is ResultState.Loading -> {
-                        _loginUserState.value = UIState.Loading
+                        _loginUserState.value = Loading
                     }
 
                     is ResultState.Success<*> -> {
-                        _loginUserState.value = UIState.Success(it.data as String)
+                        _loginUserState.value = Success(it.data as String)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -162,18 +166,18 @@ class ShopViewModel @Inject constructor(
             userDetailsUseCase.invoke().collect {
                 when (it) {
                     is ResultState.Error -> {
-                        _userDetailsState.value = UIState.Error(it.message)
+                        _userDetailsState.value = Error(it.message)
                     }
 
                     is ResultState.Loading -> {
-                        _userDetailsState.value = UIState.Loading
+                        _userDetailsState.value = Loading
                     }
 
                     is ResultState.Success<*> -> {
-                        _userDetailsState.value = UIState.Success(it.data as UserDetailsModel)
+                        _userDetailsState.value = Success(it.data as UserDetailsModel)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -205,7 +209,7 @@ class ShopViewModel @Inject constructor(
                     }
 
                     else -> {
-                        CombineUState.Empty
+                        CombineUState.Error("Unknown Error")
                     }
                 }
             }.collect { state ->
@@ -230,8 +234,8 @@ class ShopViewModel @Inject constructor(
                         _getAllCategoriesState.value =
                             UIState.Success(it.data as List<CategoryModel>)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -253,8 +257,8 @@ class ShopViewModel @Inject constructor(
                     is ResultState.Success<*> -> {
                         _getAllProductsState.value = UIState.Success(it.data as List<Product>)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -276,8 +280,8 @@ class ShopViewModel @Inject constructor(
                         _getProductsByCategoryState.value =
                             UIState.Success(it.data as List<Product>)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -298,8 +302,8 @@ class ShopViewModel @Inject constructor(
                     is ResultState.Success<*> -> {
                         _getProductByIdState.value = UIState.Success(it.data as Product)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -322,8 +326,8 @@ class ShopViewModel @Inject constructor(
                     is ResultState.Success<*> -> {
                         _getWishListState.value = UIState.Success(it.data as List<WishListModel>)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -344,8 +348,8 @@ class ShopViewModel @Inject constructor(
                     is ResultState.Success<*> -> {
                         _removeFromWishListState.value = UIState.Success(it.data as String)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -366,8 +370,8 @@ class ShopViewModel @Inject constructor(
                     is ResultState.Success<*> -> {
                         _addToWishListState.value = UIState.Success(it.data as String)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -390,8 +394,8 @@ class ShopViewModel @Inject constructor(
                     is ResultState.Success<*> -> {
                         _getCartListState.value = UIState.Success(it.data as List<CartModel>)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -411,8 +415,8 @@ class ShopViewModel @Inject constructor(
                     is ResultState.Success<*> -> {
                         _addToCartState.value = UIState.Success(it.data as String)
                     }
+                    ResultState.Empty -> Unit
 
-                    is ResultState.Empty -> {}
                 }
             }
         }
@@ -423,18 +427,18 @@ class ShopViewModel @Inject constructor(
             cartUseCase.removeFromCart(cartId).collect {
                 when (it) {
                     is ResultState.Error -> {
-                        _removeFromCartState.value = UIState.Error(it.message)
+                        _removeFromCartState.value = Error(it.message)
                     }
 
                     is ResultState.Loading -> {
-                        _removeFromCartState.value = UIState.Loading
+                        _removeFromCartState.value = Loading
                     }
 
                     is ResultState.Success<*> -> {
-                        _removeFromCartState.value = UIState.Success(it.data as String)
+                        _removeFromCartState.value = Success(it.data as String)
                     }
 
-                    is ResultState.Empty -> {}
+                    ResultState.Empty -> Unit
                 }
             }
         }
@@ -444,10 +448,10 @@ class ShopViewModel @Inject constructor(
         viewModelScope.launch {
             profileManagementUseCase.updateProfile(userDetails).collect {
                 when (it) {
-                    is ResultState.Loading -> _updateProfileState.value = UIState.Loading
-                    is ResultState.Success<*> -> _updateProfileState.value = UIState.Success(it.data as String)
-                    is ResultState.Error -> _updateProfileState.value = UIState.Error(it.message)
-                    is ResultState.Empty -> _updateProfileState.value = UIState.Empty
+                    is ResultState.Loading -> _updateProfileState.value = Loading
+                    is ResultState.Success<*> -> _updateProfileState.value = Success(it.data as String)
+                    is ResultState.Error -> _updateProfileState.value = Error(it.message)
+                    ResultState.Empty -> Unit
                 }
             }
         }
@@ -460,9 +464,23 @@ class ShopViewModel @Inject constructor(
                     is ResultState.Loading -> _uploadImageState.value = UIState.Loading
                     is ResultState.Success<*> -> _uploadImageState.value = UIState.Success(it.data as String)
                     is ResultState.Error -> _uploadImageState.value = UIState.Error(it.message)
-                    is ResultState.Empty -> _uploadImageState.value = UIState.Empty
+                    is ResultState.Empty -> Unit
                 }
             }
+        }
+    }
+
+    fun updateCartItemQuantity(cartId: String, newQuantity: Int) {
+        viewModelScope.launch {
+            cartUseCase.updateCartItemQuantity(cartId, newQuantity)
+                .collect { result ->
+                    _updateCartItemState.value = when (result) {
+                        is ResultState.Success -> Success(result.data)
+                        is ResultState.Error -> Error(result.message)
+                        ResultState.Loading -> Loading
+                        ResultState.Empty -> {}
+                    } as UIState<String>
+                }
         }
     }
 }

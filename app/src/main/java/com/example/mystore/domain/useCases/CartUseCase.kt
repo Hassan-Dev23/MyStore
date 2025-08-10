@@ -14,4 +14,6 @@ class CartUseCase @Inject constructor(private val repo: Repo) {
     suspend fun addToCart(cartProduct: CartModel) = repo.addProductToCart(cartProduct = cartProduct)
     suspend fun removeFromCart(cartId: String) = repo.removeProductFromCart(cartId = cartId)
     suspend fun getCart(userId: String) = repo.getCartProducts(userId = userId)
+    suspend fun updateCartItemQuantity(cartId: String, newQuantity: Int) =
+        repo.updateCartItemQuantity(cartId = cartId, newQuantity = newQuantity)
 }

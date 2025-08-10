@@ -42,9 +42,7 @@ fun App(viewModel: ShopViewModel = hiltViewModel()) {
                     })
                 }
                 entry<Screen.HomeGraph> {
-                    NestedGraph(onSettingClick = {
-                        backStack.add(Screen.Setting)
-                    })
+                    NestedGraph()
                 }
                 entry<Screen.Setting> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

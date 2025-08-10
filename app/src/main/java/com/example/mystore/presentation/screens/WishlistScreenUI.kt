@@ -18,12 +18,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -48,6 +51,7 @@ import coil3.compose.AsyncImage
 import com.example.mystore.domain.modelClasses.CartModel
 import com.example.mystore.domain.modelClasses.WishListModel
 import com.example.mystore.presentation.navigation.OtherScreen
+import com.example.mystore.presentation.navigation.OtherScreen.*
 import com.example.mystore.presentation.viewModel.ShopViewModel
 import com.example.mystore.presentation.viewModel.UIState
 
@@ -65,7 +69,8 @@ fun WishlistScreenUI(
     }
 
     Scaffold(
-        modifier = Modifier.padding(innerPadding)
+        modifier = Modifier.padding(innerPadding),
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -74,27 +79,13 @@ fun WishlistScreenUI(
         ) {
             when (wishlistState) {
                 is UIState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    LoadingView()
                 }
                 is UIState.Error -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = (wishlistState as UIState.Error).message,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.getWishlistItems() }) {
-                            Text("Retry")
-                        }
-                    }
+                    ErrorView(
+                        message = (wishlistState as UIState.Error).message,
+                        onRetry = { viewModel.getWishlistItems() }
+                    )
                 }
                 is UIState.Success -> {
                     val wishlistItems = (wishlistState as UIState.Success<List<WishListModel>>).data
@@ -102,133 +93,156 @@ fun WishlistScreenUI(
                         EmptyWishlistUI()
                     } else {
                         Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp)
+                            modifier = Modifier.fillMaxSize()
                         ) {
                             Text(
-                                "My Wishlist (${wishlistItems.size} items)",
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.padding(vertical = 16.dp)
+                                "My Wishlist",
+                                style = MaterialTheme.typography.headlineMedium,
+                                modifier = Modifier.padding(
+                                    start = 16.dp,
+                                    end = 16.dp,
+                                    top = 16.dp,
+                                    bottom = 8.dp
+                                )
                             )
+
+                            Text(
+                                "${wishlistItems.size} items",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             LazyColumn(
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(horizontal = 16.dp),
                                 modifier = Modifier.fillMaxSize()
                             ) {
                                 items(wishlistItems) { wishlistItem ->
                                     WishlistItemCard(
                                         wishlistItem = wishlistItem,
                                         onRemove = { viewModel.removeFromWishList(wishlistItem.id) },
-                                        onMoveToCart = {
-                                            viewModel.addToCart(
-                                                CartModel(
-                                                    userId = wishlistItem.userId,
-                                                    productId = wishlistItem.productId,
-                                                    productName = wishlistItem.productName,
-                                                    productImageUrl = wishlistItem.productImageUrl,
-                                                    price = wishlistItem.price
-                                                )
+                                        onAddToCart = {
+                                            val cartProduct = CartModel(
+                                                productId = wishlistItem.id,
+                                                productName = wishlistItem.productName,
+                                                productImageUrl = wishlistItem.productImageUrl,
+                                                price = wishlistItem.price
                                             )
-                                            viewModel.removeFromWishList(wishlistItem.id)
+                                            viewModel.addToCart(cartProduct)
                                         },
                                         onClick = {
-                                            backStack.add(OtherScreen.ProductDetails(wishlistItem.productId))
+                                            backStack.add(ProductDetails(wishlistItem.id))
                                         }
                                     )
                                 }
                                 item {
-                                    Spacer(modifier = Modifier.height(80.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
                                 }
                             }
                         }
                     }
                 }
-                is UIState.Empty -> {
-                    EmptyWishlistUI()
-                }
+                else -> Unit
+
             }
         }
     }
 }
 
 @Composable
-fun WishlistItemCard(
+private fun LoadingView() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(48.dp),
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+@Composable
+private fun WishlistItemCard(
     wishlistItem: WishListModel,
     onRemove: () -> Unit,
-    onMoveToCart: () -> Unit,
+    onAddToCart: () -> Unit,
     onClick: () -> Unit
 ) {
-    Card(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Product Image
             AsyncImage(
                 model = wishlistItem.productImageUrl,
                 contentDescription = wishlistItem.productName,
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(100.dp)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Product Details
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
                     text = wishlistItem.productName,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+
                 Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
-                    text = "Rs. ${wishlistItem.price}",
+                    text = "$${wishlistItem.price}",
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
-            }
 
-            // Action Buttons
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                IconButton(
-                    onClick = onRemove,
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Remove from wishlist"
-                    )
-                }
-                IconButton(
-                    onClick = onMoveToCart,
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ShoppingCart,
-                        contentDescription = "Move to cart"
-                    )
+                    FilledTonalButton(
+                        onClick = onAddToCart,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            Icons.Default.ShoppingCart,
+                            contentDescription = "Add to cart",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Add to Cart")
+                    }
+
+                    IconButton(
+                        onClick = onRemove,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    ) {
+                        Icon(Icons.Default.Delete, "Remove from wishlist")
+                    }
                 }
             }
         }
@@ -236,23 +250,34 @@ fun WishlistItemCard(
 }
 
 @Composable
-fun EmptyWishlistUI() {
+private fun EmptyWishlistUI() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Icon(
+            imageVector = Icons.Default.Favorite,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Text(
             "Your wishlist is empty",
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.headlineMedium
         )
+
         Spacer(modifier = Modifier.height(8.dp))
+
         Text(
-            "Add items to your wishlist to save them for later",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            "Save items you love to your wishlist",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
     }

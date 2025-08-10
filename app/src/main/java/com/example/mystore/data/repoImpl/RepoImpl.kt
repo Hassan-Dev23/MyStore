@@ -541,5 +541,18 @@ class RepoImpl @Inject constructor(
         awaitClose { }
     }
 
+    override suspend fun updateCartItemQuantity(cartId: String, newQuantity: Int): Flow<ResultState<String>> = flow {
+        try {
+            emit(ResultState.Loading)
+
+            val cartRef = firebaseFirestore.collection(CART_PATH).document(cartId)
+            cartRef.update("quantity", newQuantity).await()
+
+            emit(ResultState.Success("Quantity updated successfully"))
+        } catch (e: Exception) {
+            emit(ResultState.Error(e.message ?: "Failed to update quantity"))
+        }
+    }
 
 }
+

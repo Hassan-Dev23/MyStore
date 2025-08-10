@@ -237,9 +237,8 @@ fun ProfileScreenUI(
                         }
                     }
                 }
-                is UIState.Empty -> {
-                    // Show empty state or initial loading
-                }
+                else -> Unit
+
             }
         }
     }

@@ -2,43 +2,51 @@ package com.example.mystore.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Primary colors
-val Primary = Color(0xFF007AFF)
-val PrimaryVariant = Color(0xFF0055B3)
-val Secondary = Color(0xFF5856D6)
+// Primary Brand Colors
+val PrimaryLight = Color(0xFF0061A4)
+val PrimaryDark = Color(0xFF9ECAFF)
+val Secondary = Color(0xFF535F70)
+val SecondaryLight = Color(0xFF535F70)
+val SecondaryDark = Color(0xFFBBC7DB)
 
-// Background colors
-val BackgroundLight = Color(0xFFF2F2F7)
-val BackgroundDark = Color(0xFF000000)
-val SurfaceLight = Color(0xFFFFFFFF)
-val SurfaceDark = Color(0xFF121212)
+// Surface Colors
+val SurfaceLight = Color(0xFFFDFCFF)
+val SurfaceDark = Color(0xFF1A1C1E)
+val BackgroundLight = Color(0xFFF3F3F3)
+val BackgroundDark = Color(0xFF111214)
 
-// Text colors
-val TextPrimaryLight = Color(0xFF000000)
-val TextPrimaryDark = Color(0xFFFFFFFF)
-val TextSecondaryLight = Color(0xFF6C6C6C)
-val TextSecondaryDark = Color(0xFFB0B0B0)
+// On Colors (Text and Icons)
+val OnPrimaryLight = Color(0xFFFFFFFF)
+val OnPrimaryDark = Color(0xFF003258)
+val OnSecondaryLight = Color(0xFFFFFFFF)
+val OnSecondaryDark = Color(0xFF2B3442)
 
-// Accent colors
-val AccentBlue = Color(0xFF007AFF)
-val AccentGreen = Color(0xFF34C759)
-val AccentIndigo = Color(0xFF5856D6)
-val AccentPink = Color(0xFFFF2D55)
+// Surface Variants
+val SurfaceVariantLight = Color(0xFFDFE2EB)
+val SurfaceVariantDark = Color(0xFF43474E)
+val OnSurfaceVariantLight = Color(0xFF43474E)
+val OnSurfaceVariantDark = Color(0xFFC3C7CF)
 
-// System colors
-val SystemGray = Color(0xFF8E8E93)
-val SystemGray2 = Color(0xFFAEAEB2)
-val SystemGray3 = Color(0xFFC7C7CC)
-val SystemGray4 = Color(0xFFD1D1D6)
+// Container Colors
+val PrimaryContainerLight = Color(0xFFD1E4FF)
+val PrimaryContainerDark = Color(0xFF004881)
+val SecondaryContainerLight = Color(0xFFD6E4F7)
+val SecondaryContainerDark = Color(0xFF3B4858)
 
-// Card colors
-val CardBackgroundLight = Color(0xFFFFFFFF)
-val CardBackgroundDark = Color(0xFF1C1C1E)
-val CardBorderLight = Color(0xFFE5E5EA)
-val CardBorderDark = Color(0xFF38383A)
+// Error States
+val ErrorLight = Color(0xFFBA1A1A)
+val ErrorDark = Color(0xFFFFB4AB)
+val ErrorContainerLight = Color(0xFFFFDAD6)
+val ErrorContainerDark = Color(0xFF93000A)
 
-// Status colors
-val Success = Color(0xFF34C759)
-val Error = Color(0xFFFF3B30)
-val Warning = Color(0xFFFF9500)
-val Info = Color(0xFF5856D6)
+// Outline Colors
+val OutlineLight = Color(0xFF73777F)
+val OutlineDark = Color(0xFF8D9199)
+
+// Additional Status Colors
+val Success = Color(0xFF146B3A)
+val SuccessContainer = Color(0xFFABF5D1)
+val Warning = Color(0xFFB86E00)
+val WarningContainer = Color(0xFFFFE1C3)
+val Info = Color(0xFF0061A4)
+val InfoContainer = Color(0xFFD1E4FF)

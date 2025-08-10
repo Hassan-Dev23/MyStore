@@ -180,6 +180,8 @@ fun SignInScreenUI(
         }
 
         when (loginState) {
+
+
             is UIState.Loading -> {
                 Box(
                     modifier = Modifier
@@ -202,7 +204,8 @@ fun SignInScreenUI(
                     showSuccessDialog = false
                 }
             }
-            is UIState.Empty -> {}
+            else -> Unit
+
         }
 
         // Registration Completed Dialog

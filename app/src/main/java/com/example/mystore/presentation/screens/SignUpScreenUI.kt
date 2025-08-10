@@ -201,7 +201,6 @@ fun SignUpScreenUI(
         var showErrorDialog by remember { mutableStateOf(false) }
 
         when (signUpState) {
-            UIState.Empty -> {}
             is UIState.Error -> LaunchedEffect(Unit) {
                 showErrorDialog = true; showSuccessDialog = false
             }
@@ -223,6 +222,8 @@ fun SignUpScreenUI(
             is UIState.Success<*> -> LaunchedEffect(Unit) {
                 showSuccessDialog = true; showErrorDialog = false
             }
+            else -> Unit
+
         }
 
         if (showSuccessDialog) {
